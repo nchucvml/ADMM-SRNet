@@ -5,7 +5,7 @@
 ![image](Overview_ADMM-SRNet.png)
 
 
-The paper is accepted by IEEE transactions on Image Processing, 2023.
+The paper is accepted by IEEE Transactions on Image Processing, 2023.
 https://ieeexplore.ieee.org/document/10124145
 
 The source code will be available soon. 
