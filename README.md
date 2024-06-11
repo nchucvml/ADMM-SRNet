@@ -37,8 +37,8 @@ In the following train/eval scripts, you may need to change some arguments to th
 --load_path $STAGE2_MODEL_PATH
 ```
 
-For Imagenet and/or multi-dataset setting, you may need to use multiple GPUs for training/evaluation.
-The total batch_size should be 128 ($GPU_NUM * $BATCH_SIZE).
+For Imagenet and/or multi-class setting, you may need to use multiple GPUs for training/evaluation due to memory limit.
+The total batch_size should be 128 (= $GPU_NUM * $BATCH_SIZE).
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 train.py --batch_size 32 ...
 ```
@@ -95,8 +95,24 @@ do
 done
 ```
 
-#### CIFAR-10 Multi
+#### CIFAR-10 Multi-class
 ```
+# CIFAR-10 Multi-class Stage 1
+
+python train.py \
+--dataset cifar10 \
+--model resnet18 \
+--mode simclr_CSI \
+--shift_trans_type rot_bmix \
+--mix_alpha 0.2 \
+--batch_size 128 \
+--simclr_dim 512 \
+--suffix f512_mix82
+```
+
+```
+# CIFAR-10 Multi-dataset Stage 2
+
 python train_cocsr.py \
 --dataset cifar10 \
 --batch_size 128 \
@@ -170,8 +186,98 @@ done
 ```
 
 #### Imagenet
+```
+# Imagenet_Stage1.sh
 
-#### Imagenet Multi
+START=0
+END=29
+for i in $(seq $START $END);
+
+do     
+    python train.py \
+    --dataset imagenet \
+    --model resnet18_imagenet \
+    --mode simclr_CSI \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --batch_size 128 \
+    --one_class_idx $i \
+    --simclr_dim 512 \
+    --color_jitter_strength 2 \
+    --suffix f512_j2_mix82
+done
+```
+
+```
+# Imagenet_Stage2.sh
+
+START=0
+END=29
+for i in $(seq $START $END);
+
+do 
+    python train_cocsr.py \
+    --dataset imagenet \
+    --one_class_idx $i \
+    --batch_size 128 \
+    --model resnet18_imagenet \
+    --mode cocsr_dict \
+    --simclr_dim 512 \
+    --sr_lr 1e-3 \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --color_jitter_strength 2 \
+    --resume_path ../Data/Model/imagenet_resnet18_imagenet_unsup_simclr_CSI_shift_rot_bmix_one_class_${i}_f512_j2_mix82 \
+    --epoch 1300 \
+    --sr_dict_size 512 \
+    --sr_lambda 1e-3 \
+    --loss_lambda_sr_l1 1e-3 \
+    --invert_sr_feature_norm \
+    --loss_dict_constr_mode 1 \
+    --ini_sr_dict_train \
+    --suffix f512_j2_mix82_dm1_init  
+done
+```
+
+#### Imagenet Multi-class
+```
+# Imagenet Multi-class Stage1
+
+python train.py \
+--dataset imagenet \
+--model resnet18_imagenet \
+--mode simclr_CSI \
+--shift_trans_type rot_bmix \
+--mix_alpha 0.2 \
+--batch_size 128 \
+--simclr_dim 512 \
+--color_jitter_strength 2 \
+--suffix f512_j2_mix82
+```
+
+```
+# Imagenet Multi-class Stage2
+
+python train_cocsr.py \
+--dataset imagenet \
+--batch_size 128 \
+--model resnet18_imagenet \
+--mode cocsr_dict \
+--simclr_dim 512 \
+--sr_lr 1e-3 \
+--shift_trans_type rot_bmix \
+--mix_alpha 0.2 \
+--color_jitter_strength 2 \
+--resume_path ../Data/Model/imagenet_resnet18_imagenet_unsup_simclr_CSI_shift_rot_bmix_f512_j2_mix82 \
+--epoch 1300 \
+--sr_dict_size 512 \
+--sr_lambda 1e-3 \
+--loss_lambda_sr_l1 1e-3 \
+--invert_sr_feature_norm \
+--loss_dict_constr_mode 1 \
+--ini_sr_dict_train \
+--suffix f512_j2_mix82_dm1_init  
+```
 
 ### Testing
 #### CIFAR-10
@@ -204,7 +310,7 @@ do
 done
 ```
 
-#### CIFAR-10 Multi
+#### CIFAR-10 Multi-class
 ```
 python eval.py \
 --dataset cifar10 \
@@ -256,10 +362,58 @@ done
 ```
 
 #### Imagenet
+```
+# Imagenet_Eval.sh
 
-#### Imagenet Multi
+START=0
+END=29
+for i in $(seq $START $END);
+
+do 
+    python eval.py \
+    --dataset imagenet \
+    --one_class_idx $i \
+    --model resnet18_imagenet \
+    --mode ood_pre_cocsr_refmix \
+    --simclr_dim 512 \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --load_path ../Data/Model/imagenet_resnet18_imagenet_unsup_cocsr_dict_shift_rot_bmix_cocsr_ld0.001_lr0.001_invf_one_class_${i}_f512_j2_mix82_dm1_init/last.cocsr_model \
+    --ood_score CSI_sr \
+    --ood_samples 10 \
+    --resize_factor 0.54 \
+    --resize_fix \
+    --sr_lambda 1e-3 \
+    --sr_dict_size 512 \
+    --invert_sr_feature_norm \
+    --print_score \
+    --save_score
+done
+```
+
+#### Imagenet Multi-class
+```
+python eval.py \
+--dataset imagenet \
+--model resnet18_imagenet \
+--mode ood_pre_cocsr_refmix \
+--simclr_dim 512 \
+--shift_trans_type rot_bmix \
+--mix_alpha 0.2 \
+--load_path ../Data/Model/imagenet_resnet18_imagenet_unsup_cocsr_dict_shift_rot_bmix_cocsr_ld0.001_lr0.001_invf_f512_j2_mix82_dm1_init/last.cocsr_model \
+--ood_score CSI_sr \
+--ood_samples 10 \
+--resize_factor 0.54 \
+--resize_fix \
+--sr_lambda 1e-3 \
+--sr_dict_size 512 \
+--invert_sr_feature_norm \
+--print_score \
+--save_score
+```
 
 ### Visualizatoin
+#### CIFAR-10
 ```
 # CIFAR10_TSNE.sh
 
@@ -288,9 +442,23 @@ do
 done
 ```
 
-#### CIFAR-10
-
 ## Comparison with State-of-the-art Methods (%)
+
+| Method            | Dataset           |  AUROC (Mean) |
+| ------------------|------------------ | --------------|
+| SimCLR            | CIFAR-10-OC       |      87.9%    |
+| Rot+Trans         | CIFAR-10-OC       |      89.8%    |
+| CSI               | CIFAR-10-OC       |      94.3%    |
+| ADMM-SRNet (ours) | CIFAR-10-OC       |      95.4%    |
+
+| Method            | Dataset           |  AUROC (Mean) |
+| ------------------|------------------ | --------------|
+| SimCLR            | CIFAR-10-OC       |      87.9%    |
+| Rot+Trans         | CIFAR-10-OC       |      89.8%    |
+| CSI               | CIFAR-10-OC       |      94.3%    |
+| ADMM-SRNet (ours) | CIFAR-10-OC       |      95.4%    |
+
+For more detail, please refer to our paper.
 
 ## Trained Models
 [Google Drive](https://drive.google.com/drive/folders/1z0eTFlGp6aekYhOcN_oRZTtUD8wdjcmh?usp=sharing)
