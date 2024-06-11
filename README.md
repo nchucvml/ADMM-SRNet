@@ -23,7 +23,7 @@ Performance might vary a little due to randomness.
 - [diffdist](https://github.com/ag14774/diffdist) == 0.1 
 
 ### Datasets 
-Please refer to [CSI (NeurIPS 2020)](https://github.com/alinlab/CSI)
+Please refer to [CSI (NeurIPS 2020)](https://github.com/alinlab/CSI?tab=readme-ov-file#datasets)
 
 ### Training
 The training is currently divided in to two stages.
