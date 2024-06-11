@@ -444,19 +444,23 @@ done
 
 ## Comparison with State-of-the-art Methods (%)
 
-| Method            | Dataset           |  AUROC (Mean) |
+| Method            | One-class Dataset |  AUROC (Mean) |
 | ------------------|------------------ | --------------|
-| SimCLR            | CIFAR-10-OC       |      87.9%    |
-| Rot+Trans         | CIFAR-10-OC       |      89.8%    |
-| CSI               | CIFAR-10-OC       |      94.3%    |
-| ADMM-SRNet (ours) | CIFAR-10-OC       |      95.4%    |
+| Rot+Trans         |     CIFAR-10      |      89.8%    |
+| CSI               |     CIFAR-10      |      94.3%    |
+| ADMM-SRNet (ours) |     CIFAR-10      |      95.4%    |
 
-| Method            | Dataset           |  AUROC (Mean) |
+| Method            | One-class Dataset |  AUROC (Mean) |
 | ------------------|------------------ | --------------|
-| SimCLR            | CIFAR-10-OC       |      87.9%    |
-| Rot+Trans         | CIFAR-10-OC       |      89.8%    |
-| CSI               | CIFAR-10-OC       |      94.3%    |
-| ADMM-SRNet (ours) | CIFAR-10-OC       |      95.4%    |
+| Rot+Trans         |     CIFAR-100     |      79.8%    |
+| CSI               |     CIFAR-100     |      89.6%    |
+| ADMM-SRNet (ours) |     CIFAR-100     |      91.6%    |
+
+| Method            | One-class Dataset |  AUROC (Mean) |
+| ------------------|------------------ | --------------|
+| Rot+Trans         |    Imagenet-30    |      77.9%    |
+| CSI               |    Imagenet-30    |      91.6%    |
+| ADMM-SRNet (ours) |    Imagenet-30    |      92.8%    |
 
 For more detail, please refer to our paper.
 
