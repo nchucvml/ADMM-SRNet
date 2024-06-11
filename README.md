@@ -28,13 +28,128 @@ Please refer to [CSI (NeurIPS 2020)](https://github.com/alinlab/CSI)
 ### Training
 The training is currently divided in to two stages.
 The first stage learns the heterogeneous contrastive feature (HCF) network.
-The second stage learns the sparse dictionary (SD) network
+The second stage learns the sparse dictionary (SD) network.
 
+In the following train/eval scripts, you may need to change some arguments to the acutal filepath.
+```
+--data_path $DATASET_PATH
+--resume_path $STAGE1_MODEL_PATH
+--load_path $STAGE2_MODEL_PATH
+```
 
+For Imagenet and/or multi-dataset setting, you may need to use multiple GPUs for training/evaluation.
+The total batch_size should be 128 ($GPU_NUM * $BATCH_SIZE).
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 train.py --batch_size 32 ...
+```
+
+#### CIFAR-10
+
+#### CIFAR-10 Multi
+
+#### CIFAR-100
+```
+# CIFAR100_Stage1.sh
+
+START=0
+END=19
+for i in $(seq $START $END);
+
+do 
+    python train.py \
+    --dataset cifar100 \
+    --model resnet18 \
+    --mode simclr_CSI \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --batch_size 128 \
+    --one_class_idx $i \
+    --simclr_dim 512 \
+    --suffix f512_mix82
+done
+```
+
+```
+# CIFAR100_Stage2.sh
+
+START=0
+END=19
+for i in $(seq $START $END);
+
+do 
+    python train_cocsr.py \
+    --dataset cifar100 \
+    --one_class_idx $i \
+    --batch_size 128 \
+    --model resnet18 \
+    --mode cocsr_dict \
+    --simclr_dim 512 \
+    --sr_lr 1e-3 \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --resume_path ../Data/Model/cifar100_resnet18_unsup_simclr_CSI_shift_rot_bmix_one_class_${i}_f512_mix82 \
+    --epoch 1300 \
+    --sr_dict_size 512 \
+    --sr_lambda 1e-3 \
+    --loss_lambda_sr_l1 1e-3 \
+    --invert_sr_feature_norm \
+    --loss_dict_constr_mode 1 \
+    --ini_sr_dict_train \
+    --suffix f512_mix82_dm1_init 
+done
+```
+
+#### Imagenet
+
+#### Imagenet Multi
 
 ### Testing
 
+
+#### CIFAR-10
+
+#### CIFAR-10 Multi
+
+#### CIFAR-100
+
+```
+# CIFAR100_Eval.sh
+
+START=0
+END=19
+for i in $(seq $START $END);
+
+do 
+    python eval.py \
+    --dataset cifar100 \
+    --one_class_idx $i \
+    --model resnet18 \
+    --mode ood_pre_cocsr_refmix \
+    --simclr_dim 512 \
+    --shift_trans_type rot_bmix \
+    --mix_alpha 0.2 \
+    --load_path ../Data/Model/cifar100_resnet18_unsup_cocsr_dict_shift_rot_bmix_cocsr_ld0.001_lr0.001_invf_one_class_${i}_f512_mix82_dm1_init/last.cocsr_model \
+    --ood_score CSI_sr \
+    --ood_samples 10 \
+    --resize_factor 0.54 \
+    --resize_fix \
+    --sr_lambda 1e-3 \
+    --sr_dict_size 512 \
+    --invert_sr_feature_norm \
+    --print_score \
+    --save_score
+done
+```
+
+
+#### Imagenet
+
+#### Imagenet Multi
+
 ### Visualizatoin
+
+
+#### CIFAR-10
 
 ## Comparison with State-of-the-art Methods (%)
 
